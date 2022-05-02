@@ -1,0 +1,98 @@
+---
+title: "Group assign credit"
+output: word_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library(fpp3)
+```
+
+load data
+```{r}
+credit <- read.csv('credit (1).csv')
+
+credit$year_month <- credit$ï..year_month
+credit$ï..year_month <- NULL
+credit$year_month <- yearmonth(credit$year_month)
+```
+
+data time series
+```{r}
+credit <- as_tsibble(credit, index = year_month)
+autoplot(credit, credit_in_millions)
+```
+seasonality
+```{r}
+gg_season(credit, credit_in_millions)
+gg_subseries(credit, credit_in_millions)
+```
+
+
+splitting data
+```{r}
+train <- head(credit, nrow(credit) - 12)
+test <- tail(credit, 12)
+```
+
+model selection
+```{r}
+fit <- train %>% 
+  stretch_tsibble(.init = 36, .step = 24) %>% 
+  model(
+    arima = ARIMA(credit_in_millions),
+    ets = ETS(credit_in_millions),
+    nnet = NNETAR(credit_in_millions),
+    tslm = TSLM(credit_in_millions ~ trend()),
+    tslmseason = TSLM(credit_in_millions ~ trend() + season()),
+  )
+
+fit %>% 
+  forecast(h = 12, times = 200) %>% 
+  accuracy(train) %>% 
+  arrange(RMSE)
+```
+
+
+Best model
+```{r}
+fit <- train %>% 
+  model(TSLM(credit_in_millions ~ trend()))
+
+report(fit)
+
+gg_tsresiduals(fit)
+```
+
+Forecasting of best model
+```{r}
+fit %>% 
+  forecast(test, times = 100) %>% 
+  autoplot(test)
+
+fit %>% 
+  forecast(test, times = 100) %>% 
+  autoplot(credit)
+```
+
+Accuracy 
+```{r}
+bc_pred <- fit %>% 
+  forecast(test)
+
+y_pred <- bc_pred$.mean
+
+rmse <- function(y_actual, y_pred) {
+  sqrt(mean((y_actual - y_pred)^2))
+}
+
+mape <- function(y_actual, y_pred) {
+  mean(abs(y_actual - y_pred) / y_actual)
+}
+
+rmse(y_pred, test$credit_in_millions)
+mape(y_pred, test$credit_in_millions)
+
+```
+
