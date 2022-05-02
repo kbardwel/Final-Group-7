@@ -2,7 +2,7 @@
 title: "Group assign credit"
 output: word_document
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r}
@@ -23,12 +23,14 @@ data time series
 credit <- as_tsibble(credit, index = year_month)
 autoplot(credit, credit_in_millions)
 ```
-seasonality
+
+seasonality & lag
 ```{r}
 gg_season(credit, credit_in_millions)
 gg_subseries(credit, credit_in_millions)
+gg_lag(credit, credit_in_millions, geom = "point")
+credit %>% features(credit_in_millions, feat_acf)
 ```
-
 
 splitting data
 ```{r}
@@ -39,13 +41,14 @@ test <- tail(credit, 12)
 model selection
 ```{r}
 fit <- train %>% 
-  stretch_tsibble(.init = 36, .step = 24) %>% 
+  stretch_tsibble(.init = 24, .step = 20) %>% 
   model(
     arima = ARIMA(credit_in_millions),
     ets = ETS(credit_in_millions),
     nnet = NNETAR(credit_in_millions),
     tslm = TSLM(credit_in_millions ~ trend()),
     tslmseason = TSLM(credit_in_millions ~ trend() + season()),
+    seasonal_naive = SNAIVE(credit_in_millions ~ lag("month") + drift())
   )
 
 fit %>% 
@@ -58,7 +61,7 @@ fit %>%
 Best model
 ```{r}
 fit <- train %>% 
-  model(TSLM(credit_in_millions ~ trend()))
+  model(ARIMA(credit_in_millions))
 
 report(fit)
 
@@ -78,10 +81,10 @@ fit %>%
 
 Accuracy 
 ```{r}
-bc_pred <- fit %>% 
-  forecast(test)
+predictions <- fit %>% 
+  forecast(test, times = 100)
 
-y_pred <- bc_pred$.mean
+y_pred <- predictions$.mean
 
 rmse <- function(y_actual, y_pred) {
   sqrt(mean((y_actual - y_pred)^2))
