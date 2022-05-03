@@ -1,0 +1,13 @@
+"",".model","year_month","credit_in_millions",".mean"
+"1","ARIMA(credit_in_millions)",1667 Jan,N(1.8, 0.0083),1.83738648810267
+"2","ARIMA(credit_in_millions)",1667 Feb,N(1.8, 0.011),1.83738648810267
+"3","ARIMA(credit_in_millions)",1667 Mar,N(1.8, 0.013),1.83738648810267
+"4","ARIMA(credit_in_millions)",1667 Apr,N(1.8, 0.016),1.83738648810267
+"5","ARIMA(credit_in_millions)",1667 May,N(1.8, 0.018),1.83738648810267
+"6","ARIMA(credit_in_millions)",1667 Jun,N(1.8, 0.02),1.83738648810267
+"7","ARIMA(credit_in_millions)",1667 Jul,N(1.8, 0.023),1.83738648810267
+"8","ARIMA(credit_in_millions)",1667 Aug,N(1.8, 0.025),1.83738648810267
+"9","ARIMA(credit_in_millions)",1667 Sep,N(1.8, 0.028),1.83738648810267
+"10","ARIMA(credit_in_millions)",1667 Oct,N(1.8, 0.03),1.83738648810267
+"11","ARIMA(credit_in_millions)",1667 Nov,N(1.8, 0.032),1.83738648810267
+"12","ARIMA(credit_in_millions)",1667 Dec,N(1.8, 0.035),1.83738648810267
