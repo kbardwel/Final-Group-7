@@ -21,7 +21,8 @@ credit$year_month <- yearmonth(credit$year_month)
 data time series
 ```{r}
 credit <- as_tsibble(credit, index = year_month)
-autoplot(credit, credit_in_millions)
+autoplot(credit, credit_in_millions) + 
+  labs(y = "Galactic Credit (in millions)", x = "Year Month Date", title = "Galactic Credit")
 ```
 
 seasonality & lag
@@ -38,30 +39,71 @@ train <- head(credit, nrow(credit) - 12)
 test <- tail(credit, 12)
 ```
 
+```{r}
+train %>%
+  model(stl = STL(credit_in_millions)) %>%
+  components() %>%
+  autoplot()
+```
+
 model selection
 ```{r}
-fit <- train %>% 
-  stretch_tsibble(.init = 24, .step = 20) %>% 
+fit <- train %>%
+  stretch_tsibble(.init = 24, .step = 20) %>%
   model(
-    arima = ARIMA(credit_in_millions),
+    arima = ARIMA(credit_in_millions, stepwise = FALSE),
     ets = ETS(credit_in_millions),
     nnet = NNETAR(credit_in_millions),
     tslm = TSLM(credit_in_millions ~ trend()),
-    tslmseason = TSLM(credit_in_millions ~ trend() + season()),
-    seasonal_naive = SNAIVE(credit_in_millions ~ lag("month") + drift())
+    tslmseason = TSLM(credit_in_millions ~ trend() + season())
   )
 
-fit %>% 
-  forecast(h = 12, times = 200) %>% 
-  accuracy(train) %>% 
+fit %>%
+  forecast(h = 12, times = 200) %>%
+  accuracy(credit) %>%
   arrange(RMSE)
 ```
 
+lag model code
+```{r}
+# creditlag <- credit %>%
+# mutate(lag1 = lag(credit_in_millions, 1))
+# 
+# trainlag <- head(creditlag, nrow(credit) - 12)
+# testlag <- tail(creditlag, 12)
+# 
+# #credit$lag1 <- creditlag$lag1
+# 
+# fit <- trainlag %>%
+# model(
+# tslmlag = TSLM(credit_in_millions ~ lag1),
+# tslm = TSLM(credit_in_millions ~ trend()),
+# tslmlagtrend = TSLM(credit_in_millions ~ trend() + lag1),
+# arima = ARIMA(credit_in_millions),
+# ets = ETS(credit_in_millions)
+# )
+# 
+# report(fit) %>%
+# arrange(AIC)
+# 
+# 
+# fit %>%
+# forecast(h = 12, times = 200) %>%
+# accuracy(credit)
+# credit
+# 
+# fit <- fit %>%
+# select(tslmlagtrend)
+# 
+# fit %>%
+# forecast(testlag, times = 100) %>%
+# autoplot(testlag)
+```
 
 Best model
 ```{r}
 fit <- train %>% 
-  model(ARIMA(credit_in_millions))
+  model(ARIMA(credit_in_millions, stepwise = FALSE))
 
 report(fit)
 
@@ -72,7 +114,8 @@ Forecasting of best model
 ```{r}
 fit %>% 
   forecast(test, times = 100) %>% 
-  autoplot(test)
+  autoplot(test) +
+  labs(title = "12 Month Forecast", y = "Galactic Credit (in millions)", x = "Year Month Date")
 
 fit %>% 
   forecast(test, times = 100) %>% 
@@ -97,10 +140,5 @@ mape <- function(y_actual, y_pred) {
 rmse(y_pred, test$credit_in_millions)
 mape(y_pred, test$credit_in_millions)
 
-```
-
-Final predictions
-```{r}
-write.csv(predictions, "predictions.csv")
 ```
 
