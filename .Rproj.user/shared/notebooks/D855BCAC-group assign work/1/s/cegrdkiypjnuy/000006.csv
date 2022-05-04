@@ -1,0 +1,4 @@
+"0","fit %>% "
+"0","  forecast(test, times = 100) %>% "
+"0","  autoplot(test) +"
+"0","  labs(title = ""12 Month Forecast"", y = ""Galactic Credit (in millions)"", x = ""Year Month Date"")"

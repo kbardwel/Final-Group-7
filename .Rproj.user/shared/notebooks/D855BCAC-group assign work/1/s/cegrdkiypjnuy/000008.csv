@@ -1,0 +1,4 @@
+"0",""
+"0","fit %>% "
+"0","  forecast(test, times = 100) %>% "
+"0","  autoplot(credit)"
