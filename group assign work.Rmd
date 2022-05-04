@@ -99,3 +99,8 @@ mape(y_pred, test$credit_in_millions)
 
 ```
 
+Final predictions
+```{r}
+write.csv(predictions, "predictions.csv")
+```
+
