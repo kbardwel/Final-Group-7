@@ -1,0 +1,83 @@
+---
+title: "group work"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library(fpp3)
+```
+
+load data
+```{r}
+credit <- read.csv('credit (1).csv')
+
+credit$year_month <- credit$ï..year_month
+credit$ï..year_month <- NULL
+credit$year_month <- yearmonth(credit$year_month)
+```
+
+data time series
+```{r}
+credit <- as_tsibble(credit, index = year_month)
+autoplot(credit, credit_in_millions)
+```
+
+```{r}
+creditlag <- credit %>%
+  mutate(lag1 = lag(credit_in_millions, 1))
+
+trainlag <- head(creditlag, nrow(credit) - 12)
+testlag <- tail(creditlag, 12)
+
+fit <- trainlag %>%
+  model(
+    tslmlag = TSLM(credit_in_millions ~ lag1),
+    tslm = TSLM(credit_in_millions ~ trend()),
+    tslmlagtrend = TSLM(credit_in_millions ~ trend() + lag1),
+    tslmlagtrendseason = TSLM(credit_in_millions ~ trend() + lag1 + season()),
+    arima = ARIMA(credit_in_millions),
+    ets = ETS(credit_in_millions)
+      )
+
+glance(fit) %>%
+  arrange(AIC)
+
+fit <- fit %>% 
+  select(tslmlagtrend)
+
+fit %>% 
+  forecast(testlag, times = 100) %>% 
+  autoplot(testlag)
+
+```
+
+```{r}
+fit <- trainlag %>% 
+  model(TSLM(credit_in_millions ~ trend() + lag1 + season()))
+
+report(fit)
+
+gg_tsresiduals(fit)
+
+fit %>% 
+  forecast(testlag, times = 100) %>% 
+  autoplot(testlag)
+
+fit %>% 
+  forecast(testlag, times = 100) %>% 
+  autoplot(credit)
+
+```
+
+
+
+```{r}
+fit %>% 
+  forecast(h = 12)
+
+```
+
+
+
